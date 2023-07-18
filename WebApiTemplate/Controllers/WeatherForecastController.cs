@@ -1,9 +1,10 @@
-    using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore;
 
 namespace WebApiTemplate.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+//[Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
@@ -29,6 +30,8 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
+
+
         return val;
     }
 
@@ -44,5 +47,21 @@ public class WeatherForecastController : ControllerBase
         .ToArray();
 
         return await Task.FromResult(@value);
+    }
+
+    [HttpGet("convertToCelsius/{degrees}", Name = "ConvertToCelsius")]
+    public async Task<int> ConvertToCelsius(int degrees)
+    {
+        var @value = (degrees - 32) * 5 / 9;
+
+        _logger.LogInformation("convertion successful");
+        return await Task.FromResult(@value);
+    }
+
+    [HttpGet]
+    [Route("{Date}/{TemperatureC}/{TemperatureF}/{Summary}")]
+    public string Get([FromRoute] WeatherForecast wr)
+    {
+        return wr.TemperatureF.ToString();
     }
 }
