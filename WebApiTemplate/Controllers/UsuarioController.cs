@@ -12,11 +12,13 @@ namespace WebApiTemplate.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
+        private readonly ILogger<UsuarioController> _logger;
         private readonly IConfiguration _config;
 
-        public UsuarioController(IConfiguration config)
+        public UsuarioController(IConfiguration config, ILogger<UsuarioController> logger)
         {
             _config = config;
+            _logger = logger;
         }
 
                    
@@ -29,8 +31,10 @@ namespace WebApiTemplate.Controllers
             {
                 // Crear el token
                 var token = Generate(user);
+                _logger.LogWarning($"Ingreso correctamentee al usuario: {userLogin.Username}");
                 return Ok(token);
             }
+            _logger.LogWarning($"Intento de inicio de sesión fallido para el usuario: {userLogin.Username}");
             return NotFound("Usuario no encontrado");
         }
          private Usuario Authenticate(Login userLogin)
