@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using WebApiTemplate.Data;
+using WebApiTemplate.Bd;
 
 namespace WebApiTemplate.Modelo
 {
@@ -12,11 +12,11 @@ namespace WebApiTemplate.Modelo
         public string Subject { get; set; }
 
 
-        public static dynamic validarToken(ClaimsIdentity identify)
+        public static dynamic validarToken(ClaimsIdentity identify, List<Usuario> usuar)
         {
             try
             {
-                if (identify.Claims.Count() ==  0)
+                if (identify.Claims.Count() == 0)
                 {
                     return new
                     {
@@ -25,8 +25,10 @@ namespace WebApiTemplate.Modelo
                         result = ""
                     };
                 }
+
+
                 var id = identify.Claims.FirstOrDefault(x => x.Type == "id").Value;
-                Usuario usuario = UsuarioData.Listar().FirstOrDefault(x => x.IdUsuario == Int32.Parse(id));
+                Usuario usuario = usuar.FirstOrDefault(x => x.IdUsuario == Int32.Parse(id)) ?? null;
 
                 return new
                 {
@@ -35,12 +37,12 @@ namespace WebApiTemplate.Modelo
                     result = usuario
                 };
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 return new
                 {
                     success = false,
-                    message = "Catch: "+ ex.Message,
+                    message = "Catch: " + ex.Message,
                     result = ""
                 };
             }
