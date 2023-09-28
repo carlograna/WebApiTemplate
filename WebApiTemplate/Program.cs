@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using NLog;
 using NLog.Web;
-using WebApiTemplate.Bd;
+using WebApiTemplate.Database;
 using Microsoft.EntityFrameworkCore;
 
 var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
@@ -41,7 +41,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    builder.Services.AddDbContext<PruebaContext>(options =>
+    builder.Services.AddDbContext<UserContext>(options =>
       options.UseSqlServer(builder.Configuration.GetConnectionString("EFIntroContext")));
 
     builder.Services.AddCors(options =>

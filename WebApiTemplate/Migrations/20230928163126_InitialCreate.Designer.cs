@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using WebApiTemplate.Bd;
+using WebApiTemplate.Database;
 
 #nullable disable
 
 namespace WebApiTemplate.Migrations
 {
-    [DbContext(typeof(PruebaContext))]
-    [Migration("20230926165418_InitialCreate")]
+    [DbContext(typeof(UserContext))]
+    [Migration("20230928163126_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,44 +24,44 @@ namespace WebApiTemplate.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("WebApiTemplate.Bd.Usuario", b =>
+            modelBuilder.Entity("WebApiTemplate.Database.User", b =>
                 {
-                    b.Property<int>("IdUsuario")
+                    b.Property<int>("IdUser")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUsuario"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdUser"), 1L, 1);
 
-                    b.Property<string>("Ciudad")
+                    b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Correo")
+                    b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DocumentoIdentidad")
+                    b.Property<string>("Id_Card")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Nombres")
+                    b.Property<string>("Names")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Rol")
+                    b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Telefono")
+                    b.Property<DateTime>("Registration_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Role")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("IdUsuario");
+                    b.HasKey("IdUser");
 
-                    b.ToTable("Usuario", (string)null);
+                    b.ToTable("User", (string)null);
                 });
 #pragma warning restore 612, 618
         }

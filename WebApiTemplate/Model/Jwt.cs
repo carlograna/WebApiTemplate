@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
-using WebApiTemplate.Bd;
+using WebApiTemplate.Database;
 
-namespace WebApiTemplate.Modelo
+namespace WebApiTemplate.Model
 {
     public class Jwt
     {
@@ -12,7 +12,7 @@ namespace WebApiTemplate.Modelo
         public string Subject { get; set; }
 
 
-        public static dynamic validarToken(ClaimsIdentity identify, List<Usuario> usuar)
+        public static dynamic validateToken(ClaimsIdentity identify, List<User> user)
         {
             try
             {
@@ -21,20 +21,20 @@ namespace WebApiTemplate.Modelo
                     return new
                     {
                         success = false,
-                        message = "verificar si estas enviando un token válido",
+                        message = "Check if you are sending a valid token",
                         result = ""
                     };
                 }
 
 
                 var id = identify.Claims.FirstOrDefault(x => x.Type == "id").Value;
-                Usuario usuario = usuar.FirstOrDefault(x => x.IdUsuario == Int32.Parse(id)) ?? null;
+                User  userSearch = user.FirstOrDefault(x => x.IdUser == Int32.Parse(id)) ?? null;
 
                 return new
                 {
                     success = true,
-                    message = "exito",
-                    result = usuario
+                    message = "Success",
+                    result = userSearch
                 };
             }
             catch (Exception ex)
