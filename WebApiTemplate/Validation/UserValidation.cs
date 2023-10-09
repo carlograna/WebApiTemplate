@@ -20,12 +20,12 @@ namespace WebApiTemplate.Validation
             if (string.IsNullOrEmpty(password))
                 throw new NamesNotProviderException();
 
-            if (password.Length > 8)
+            if (password.Length < 8)
             {
-                return true;
+                throw new PasswordLenghtException();
             }
-            throw new PasswordLenghtException();
-            return false;
+            
+            return true;
         }
 
         public bool IsValidEmail(string email)
