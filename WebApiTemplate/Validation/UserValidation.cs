@@ -5,7 +5,7 @@ using WebApiTemplate.Database;
 
 namespace WebApiTemplate.Validation
 {
-    public class UserValidation : AbstractValidator<User>
+    public class UserValidation : AbstractValidator<User1>
     {
 
         public bool NotEmptyNames(string name)

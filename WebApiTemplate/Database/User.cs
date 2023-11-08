@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApiTemplate.Database
 {
-    public class User
+    public class User1
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -16,6 +16,6 @@ namespace WebApiTemplate.Database
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? City { get; set; }
-        public DateTime Registration_date { get; set; }
+        public string Registration_date { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace WebApiTemplate.Model
         public string Subject { get; set; }
 
 
-        public static dynamic validateToken(ClaimsIdentity identify, List<User> user)
+        public static dynamic validateToken(ClaimsIdentity identify, List<User1> user)
         {
             try
             {
@@ -28,7 +28,7 @@ namespace WebApiTemplate.Model
 
 
                 var id = identify.Claims.FirstOrDefault(x => x.Type == "id").Value;
-                User  userSearch = user.FirstOrDefault(x => x.IdUser == Int32.Parse(id)) ?? null;
+                User1 userSearch = user.FirstOrDefault(x => x.IdUser == Int32.Parse(id)) ?? null;
 
                 return new
                 {

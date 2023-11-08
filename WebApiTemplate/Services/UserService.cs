@@ -11,7 +11,7 @@ namespace WebApiTemplate.Services
 {
     public class UserService
     {
-       public async Task<User> LoginJwt(LoginRequest userLogin, UserContext _context)
+       public async Task<User1> LoginJwt(LoginRequest userLogin, UserContext _context)
         {
             var user = await Authenticate(userLogin, _context);
             if (user != null)
@@ -22,10 +22,10 @@ namespace WebApiTemplate.Services
                 return null!;
            
         }
-        private async Task<User> Authenticate(LoginRequest userLogin, UserContext _context)
+        private async Task<User1> Authenticate(LoginRequest userLogin, UserContext _context)
         {
             await Task.Delay(2000);
-            var currentUser = _context.User?.ToList().FirstOrDefault(user => user.Username.ToLower() == userLogin.Username.ToLower()
+            var currentUser = _context.User1?.ToList().FirstOrDefault(user => user.Username.ToLower() == userLogin.Username.ToLower()
                    && user.Password == userLogin.Password); ;
             if (currentUser != null)
             {
@@ -33,7 +33,7 @@ namespace WebApiTemplate.Services
             }
             return null;
         }
-        public string Generate(User user, IConfiguration _config)
+        public JwtSecurityToken Generate(User1 user, IConfiguration _config)
         {
             var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -48,13 +48,13 @@ namespace WebApiTemplate.Services
                         new Claim("id", user.IdUser.ToString()),
                     };
             // Crear el token
-            var token = new JwtSecurityToken(
+            
+            return new JwtSecurityToken(
                 _config["Jwt:Issuer"],
                 _config["Jwt:Audience"],
                 claims,
                 expires: DateTime.Now.AddMinutes(60),
-                signingCredentials: credentials);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                signingCredentials: credentials); ;
         }
     }
 }
