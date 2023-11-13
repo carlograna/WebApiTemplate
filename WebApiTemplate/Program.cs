@@ -11,8 +11,6 @@ logger.Debug("init main");
 
 try
 {
-    var myAllowSpecificOrigins = "myAllowSpecificOrigins";
-
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
@@ -48,10 +46,11 @@ try
     {
 
 
-        options.AddPolicy(name: myAllowSpecificOrigins, builder =>
+        options.AddPolicy("Policy", builder =>
         {
-            builder.WithOrigins("https://localhost:420")
+            builder.AllowAnyOrigin()
             .AllowAnyMethod()
+            .AllowAnyHeader()
             .AllowAnyHeader();
         });
     });
@@ -59,15 +58,16 @@ try
     try
     {
         var app = builder.Build();
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
+        //if (app.Environment.IsDevelopment())
+        //{
+        //    app.UseSwagger();
+        //    app.UseSwaggerUI();
+        //}
+        app.UseSwagger();
+        app.UseSwaggerUI();
         app.UseHttpsRedirection();
 
-        app.UseCors(myAllowSpecificOrigins);
+        app.UseCors("Policy");
 
         app.UseAuthentication();
 

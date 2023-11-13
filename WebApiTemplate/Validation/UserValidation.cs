@@ -1,21 +1,40 @@
 ﻿using FluentValidation;
+using Microsoft.CodeAnalysis.FlowAnalysis;
+using System.Text.RegularExpressions;
 using WebApiTemplate.Database;
 
 namespace WebApiTemplate.Validation
 {
-    public class UserValidation : AbstractValidator<User>
+    public class UserValidation : AbstractValidator<User1>
     {
-        public UserValidation()
+
+        public bool NotEmptyNames(string name)
         {
-            RuleFor(r => r.Names).NotEmpty().WithMessage("The name cannot be empty ");
+            if (string.IsNullOrEmpty(name))
+                throw new NamesNotProviderException();
+            return true;
+        }
 
-            RuleFor(r => r.Username).NotEmpty().WithMessage("The username cannot be empty");
+        public bool IsValidPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                throw new NamesNotProviderException();
 
-            RuleFor(r => r.Email)
-                .NotEmpty().WithMessage("The email cannot be empty")
-                .EmailAddress().WithMessage("It must be a valid email");
+            if (password.Length < 8)
+            {
+                throw new PasswordLenghtException();
+            }
+            
+            return true;
+        }
 
-            RuleFor(r => r.Password).NotEmpty().WithMessage("The Password cannot be empty");
+        public bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                throw new EmailNotProviderException();
+
+            Regex regex = new Regex(@"^[\w0-9._%+-]+@[\w0-9.-]+\.[\w]{2,6}$");
+            return regex.IsMatch(email);
         }
     }
 }

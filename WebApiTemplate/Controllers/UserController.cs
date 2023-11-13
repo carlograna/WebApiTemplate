@@ -1,11 +1,13 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Primitives;
 using WebApiTemplate.Database;
 using WebApiTemplate.Model;
 using WebApiTemplate.Request;
+using WebApiTemplate.Services;
 using WebApiTemplate.Validation;
 
 namespace WebApiTemplate.Controllers
@@ -25,79 +27,50 @@ namespace WebApiTemplate.Controllers
             _logger = logger;
         }
 
-      
         //Login using Nlog
         //usin JWT for create Tokens
         [HttpPost("loginJWT")]
         public async Task<IActionResult> LoginJwt(LoginRequest userLogin)
         {
-            var user = await Authenticate(userLogin);
-            if (user != null)
+            
+            var userService = new UserService();
+            var user = await userService.LoginJwt(userLogin, _context);
+           if (user != null)
             {
                 // Crear el token
-                var token = Generate(user);
-                return Ok(token);
+                var token = userService.Generate(user, _config);
+                return Ok(new
+                {
+                    response = new JwtSecurityTokenHandler().WriteToken(token)
+                });
             }
-            _logger.LogWarning($"Failed login attempt for user: {userLogin.Username}");
+            
             return NotFound("User not found");
         }
-        private async Task<User> Authenticate(LoginRequest userLogin)
-        {
-            await Task.Delay(2000);
-            var currentUser = _context.User?.ToList().FirstOrDefault(user => user.Username.ToLower() == userLogin.Username.ToLower()
-                   && user.Password == userLogin.Password); ;
-            if (currentUser != null)
-            {
-               return currentUser;
-            }
-            return null;
-        }
-        private string Generate(User user)
-        {
-            var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            // Crear los claims
-            var claims = new[]
-            {
-                        new Claim(ClaimTypes.NameIdentifier, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.GivenName, user.Names),
-                        new Claim(ClaimTypes.Surname, user.Phone),
-                        new Claim(ClaimTypes.Role, user.Role),
-                        new Claim("id", user.IdUser.ToString()),
-                    };
-            // Crear el token
-            var token = new JwtSecurityToken(
-                _config["Jwt:Issuer"],
-                _config["Jwt:Audience"],
-                claims,
-                expires: DateTime.Now.AddMinutes(60),
-                signingCredentials: credentials);
-             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+       
 
         // GET: api/Usuarios
         [HttpGet("GetUser")]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser()
+        public async Task<ActionResult<IEnumerable<User1>>> GetUser()
         {
-            if (_context.User == null)
+            if (_context.User1 == null)
             {
                 return NotFound();
             }
-            return await _context.User.ToListAsync();
+            return await _context.User1.ToListAsync();
         }
 
-        
+
 
         // GET: api/Usuarios/5
         [HttpGet("GetUser{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User1>> GetUser(int id)
         {
-            if (_context.User == null)
+            if (_context.User1 == null)
             {
                 return NotFound();
             }
-            var user = await _context.User.FindAsync(id);
+            var user = await _context.User1.FindAsync(id);
 
             if (user == null)
             {
@@ -109,7 +82,7 @@ namespace WebApiTemplate.Controllers
 
         // PUT: api/Usuarios/5
         [HttpPut("UpdateUser{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public async Task<IActionResult> PutUser(int id, User1 user)
         {
             if (id != user.IdUser)
             {
@@ -138,19 +111,46 @@ namespace WebApiTemplate.Controllers
 
         // POST: api/Usuarios
         [HttpPost("insertUser")]
-        public async Task<ActionResult<User>> PostUsuario(User user)
+        public async Task<ActionResult<User1>> PostUsuario(User1 user)
         {
             var validador = new UserValidation();
-            var resultado = validador.Validate(user);
+            var resultadoName = validador.NotEmptyNames(user.Names);
+            var resultadoPassword = validador.IsValidPassword(user.Password);
+            var resultadoEmail = validador.IsValidEmail(user.Email);
 
-            if (_context.User == null)
+            var registration_date = DateTime.Today;
+            //var date= "registration_date.Month."
+
+
+            if (_context.User1 == null)
             {
                 return Problem("Entity set 'UserContext.User is null.");
             }
-            if (resultado.IsValid)
+            if (resultadoName)
             {
-                _context.User.Add(user);
-                await _context.SaveChangesAsync();
+                if (resultadoPassword)
+                {
+                    if (resultadoEmail)
+                    {
+                        //user.Registration_date = registration_date;
+                        _context.User1.Add(user);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        return NotFound("The email must be valid");
+                    }
+                }
+                else
+                {
+                    return NotFound("Password can't be empty");
+                }
+
+
+            }
+            else
+            {
+                return NotFound("Name can't be empty ");
             }
             return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
         }
@@ -160,10 +160,10 @@ namespace WebApiTemplate.Controllers
         public async Task<dynamic> DeleteUsuario(int id)
         {
             var identify = HttpContext.User.Identity as ClaimsIdentity;
-            var rtoken = Jwt.validateToken(identify, _context.User.ToList());
+            var rtoken = Jwt.validateToken(identify, _context.User1.ToList());
 
-            if (!rtoken.success)  return rtoken;
-            User usuario1 = rtoken.result;
+            if (!rtoken.success) return rtoken;
+            User1 usuario1 = rtoken.result;
             Console.WriteLine("Yes" + usuario1.ToString);
             if (usuario1.Role != "Administrador")
             {
@@ -176,27 +176,27 @@ namespace WebApiTemplate.Controllers
             }
             else
             {
-                if (_context.User == null)
+                if (_context.User1 == null)
                 {
                     return NotFound("The user wasn't found");
                 }
-                var usuario = await _context.User.FindAsync(id);
+                var usuario = await _context.User1.FindAsync(id);
                 if (usuario == null)
                 {
                     return NotFound("The user wasn't found");
                 }
 
-                _context.User.Remove(usuario);
+                _context.User1.Remove(usuario);
                 await _context.SaveChangesAsync();
 
                 return Ok(usuario);
-            }   
-        }        
+            }
+        }
         private bool UsuarioExists(int id)
         {
-            return (_context.User?.Any(e => e.IdUser == id)).GetValueOrDefault();
+            return (_context.User1?.Any(e => e.IdUser == id)).GetValueOrDefault();
         }
 
-        
+
     }
 }
