@@ -23,7 +23,7 @@ namespace XUnitTest
             using (var dbContext = new UserContext(options))
             {
                 // Realiza consultas a la base de datos para obtener datos de prueba
-                var resultado = dbContext.User.FirstOrDefault();
+                var resultado = dbContext.User1.FirstOrDefault();
 
                 // Realiza afirmaciones para comprobar el resultado de la prueba
                 Assert.NotNull(resultado);

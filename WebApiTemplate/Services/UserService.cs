@@ -37,7 +37,7 @@ namespace WebApiTemplate.Services
         {
             var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            // Crear los claims
+            // Create claims
             var claims = new[]
             {
                         new Claim(ClaimTypes.NameIdentifier, user.Username),
@@ -47,8 +47,8 @@ namespace WebApiTemplate.Services
                         new Claim(ClaimTypes.Role, user.Role),
                         new Claim("id", user.IdUser.ToString()),
                     };
-            // Crear el token
-            
+            // Create token
+
             return new JwtSecurityToken(
                 _config["Jwt:Issuer"],
                 _config["Jwt:Audience"],
