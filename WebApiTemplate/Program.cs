@@ -5,6 +5,7 @@ using NLog;
 using NLog.Web;
 using WebApiTemplate.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 logger.Debug("init main");
@@ -40,7 +41,8 @@ try
     builder.Services.AddSwaggerGen();
 
     builder.Services.AddDbContext<UserContext>(options =>
-      options.UseSqlServer(builder.Configuration.GetConnectionString("EFIntroContext")));
+      options.UseSqlServer(builder.Configuration.GetConnectionString("EFIntroContext")).
+      UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
     builder.Services.AddCors(options =>
     {
@@ -50,7 +52,6 @@ try
         {
             builder.AllowAnyOrigin()
             .AllowAnyMethod()
-            .AllowAnyHeader()
             .AllowAnyHeader();
         });
     });

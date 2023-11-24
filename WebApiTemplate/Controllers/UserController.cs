@@ -19,6 +19,7 @@ namespace WebApiTemplate.Controllers
         private readonly UserContext _context;
         private readonly ILogger<UserController> _logger;
         private readonly IConfiguration _config;
+        private User1 user1;
 
         public UserController(UserContext context, IConfiguration config, ILogger<UserController> logger)
         {
@@ -82,36 +83,55 @@ namespace WebApiTemplate.Controllers
 
         // PUT: api/Usuarios/5
         [HttpPut("UpdateUser{id}")]
-        public async Task<IActionResult> PutUser(int id, User1 user)
+        public async Task<dynamic> PutUser(int id, User1 user)
         {
-            if (id != user.IdUser)
+            var identify = HttpContext.User.Identity as ClaimsIdentity;
+            var rtoken = Jwt.validateToken(identify, _context.User1.ToList());
+
+            if (!rtoken.success) return rtoken;
+            user1 = rtoken.result;
+            Console.WriteLine("Yes" + user1.ToString);
+            if (user1.Role != "Administrador")
             {
-                return BadRequest("There is no user with that id");
+                return new
+                {
+                    Success = false,
+                    Message = "Check that your token is valid",
+                    result = ""
+                };
+            }
+            else
+            {
+                if (id != user.IdUser)
+                {
+                    return BadRequest("There is no user with that id");
+                }
+
+                _context.Entry(user).State = EntityState.Modified;
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!UsuarioExists(id))
+                    {
+                        return NotFound("The user doesn't exist");
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return Ok("The user was successfully modified");
             }
 
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UsuarioExists(id))
-                {
-                    return NotFound("The user doesn't exist");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return Ok("The user was successfully modified");
         }
 
         // POST: api/Usuarios
         [HttpPost("insertUser")]
-        public async Task<ActionResult<User1>> PostUsuario(User1 user)
+        public async Task<ActionResult<dynamic>> PostUsuario(User1 user)
         {
             var validador = new UserValidation();
             var resultadoName = validador.NotEmptyNames(user.Names);
@@ -121,38 +141,58 @@ namespace WebApiTemplate.Controllers
             var registration_date = DateTime.Today;
             //var date= "registration_date.Month."
 
+            var identify = HttpContext.User.Identity as ClaimsIdentity;
+            var rtoken = Jwt.validateToken(identify, _context.User1.ToList());
 
-            if (_context.User1 == null)
+            if (!rtoken.success) return rtoken;
+            User1 usuario1 = rtoken.result;
+            if (usuario1.Role != "Administrador")
             {
-                return Problem("Entity set 'UserContext.User is null.");
-            }
-            if (resultadoName)
-            {
-                if (resultadoPassword)
+                return new
                 {
-                    if (resultadoEmail)
-                    {
-                        //user.Registration_date = registration_date;
-                        _context.User1.Add(user);
-                        await _context.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        return NotFound("The email must be valid");
-                    }
-                }
-                else
-                {
-                    return NotFound("Password can't be empty");
-                }
-
-
+                    Success = false,
+                    Message = "Check that your token is valid",
+                    result = ""
+                };
             }
             else
             {
-                return NotFound("Name can't be empty ");
+                if (_context.User1 == null)
+                {
+                    return Problem("Entity set 'UserContext.User is null.");
+                }
+                if (resultadoName)
+                {
+                    if (resultadoPassword)
+                    {
+                        if (resultadoEmail)
+                        {
+                            //user.Registration_date = registration_date;
+                            _context.User1.Add(user);
+                            await _context.SaveChangesAsync();
+                        }
+                        else
+                        {
+                            return NotFound("The email must be valid");
+                        }
+                    }
+                    else
+                    {
+                        return NotFound("Password can't be empty");
+                    }
+
+
+                }
+                else
+                {
+                    return NotFound("Name can't be empty ");
+                }
+                return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
             }
-            return CreatedAtAction("GetUser", new { id = user.IdUser }, user);
+            
+
+
+           
         }
 
         //DELETE: api/Usuarios/5
