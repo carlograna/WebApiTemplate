@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Microsoft.CodeAnalysis.FlowAnalysis;
 using System.Text.RegularExpressions;
 using WebApiTemplate.Database;
 
@@ -24,7 +23,7 @@ namespace WebApiTemplate.Validation
             {
                 throw new PasswordLenghtException();
             }
-            
+
             return true;
         }
 

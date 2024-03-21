@@ -1,7 +1,4 @@
-﻿using System.Text;
-using System.Collections.Generic;
-
-namespace WebApiTemplate.Validation
+﻿namespace WebApiTemplate.Validation
 {
     public class EmailNotProviderException : Exception
     {
