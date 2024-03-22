@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using WebApiTemplate.Controllers;
 using WebApiTemplate.Database;
 using WebApiTemplate.Request;
 
@@ -11,16 +8,20 @@ namespace WebApiTemplate.Services
 {
     public class UserService
     {
-       public async Task<User1> LoginJwt(LoginRequest userLogin, UserContext _context)
+
+        private readonly HttpClient _httpClient;
+
+
+        public async Task<User1> LoginJwt(LoginRequest userLogin, UserContext _context)
         {
             var user = await Authenticate(userLogin, _context);
             if (user != null)
             {
                 return user;
-                
+
             }
-                return null!;
-           
+            return null!;
+
         }
         private async Task<User1> Authenticate(LoginRequest userLogin, UserContext _context)
         {
@@ -48,7 +49,7 @@ namespace WebApiTemplate.Services
                         new Claim("id", user.IdUser.ToString()),
                     };
             // Crear el token
-            
+
             return new JwtSecurityToken(
                 _config["Jwt:Issuer"],
                 _config["Jwt:Audience"],
@@ -56,5 +57,7 @@ namespace WebApiTemplate.Services
                 expires: DateTime.Now.AddMinutes(60),
                 signingCredentials: credentials); ;
         }
+
+
     }
 }

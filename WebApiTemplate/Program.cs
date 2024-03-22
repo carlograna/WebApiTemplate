@@ -1,95 +1,101 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using NLog;
-using NLog.Web;
-using WebApiTemplate.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
+using WebApiTemplate.Data;
+using WebApiTemplate.Database;
+using WebApiTemplate.Model;
 
-var logger = NLog.LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-logger.Debug("init main");
+var builder = WebApplication.CreateBuilder(args);
 
-try
+// Add services to the container.
+builder.Services.AddCors(options =>
 {
-    var builder = WebApplication.CreateBuilder(args);
 
-    // Add services to the container.
-    builder.Services.AddControllers();
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+options.AddPolicy("Policy",
+     builder => builder.WithOrigins("http://localhost:4200", "https://localhost:4200", "https://localhost:7115")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials()
+                          .SetIsOriginAllowedToAllowWildcardSubdomains());
+});
 
-    builder.Logging.ClearProviders();
-    builder.Host.UseNLog();
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Test01", Version = "v1" });
 
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
     {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-        };
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization header using the Bearer scheme."
+
     });
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    builder.Services.AddDbContext<UserContext>(options =>
-      options.UseSqlServer(builder.Configuration.GetConnectionString("EFIntroContext")));
-
-    builder.Services.AddCors(options =>
-    {
-
-
-        options.AddPolicy("Policy", builder =>
-        {
-            builder.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowAnyHeader();
-        });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                          new OpenApiSecurityScheme
+                          {
+                              Reference = new OpenApiReference
+                              {
+                                  Type = ReferenceType.SecurityScheme,
+                                  Id = "Bearer"
+                              }
+                          },
+                         new string[] {}
+        }
     });
+});
 
-    try
-    {
-        var app = builder.Build();
-        //if (app.Environment.IsDevelopment())
-        //{
-        //    app.UseSwagger();
-        //    app.UseSwaggerUI();
-        //}
-        app.UseSwagger();
-        app.UseSwaggerUI();
-        app.UseHttpsRedirection();
+builder.Services.AddDbContext<UserContext>(option => option.UseSqlServer("name=ConnectionStrings:EFIntroContext"));
+builder.Services.AddScoped<UserRepository>();
 
-        app.UseCors("Policy");
 
-        app.UseAuthentication();
 
-        app.UseAuthorization();
-
-        app.MapControllers();
-
-        app.Run();
-    }
-    catch (Exception ex)
-    {
-        logger.Error(ex, "Programa detenido porque tiene excepciones");
-    }
-}
-catch (Exception e)
+builder.Services.Configure<JwtOption>(builder.Configuration.GetSection("Jwt"));
+var key = builder.Configuration.GetSection("Jwt:Key").Get<string>();
+builder.Services.AddAuthentication(x =>
 {
-    logger.Error(e, "Programa detenido porque tiene excepciones");
-    throw;
-}
-
-finally
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
 {
-    NLog.LogManager.Shutdown();
+    o.RequireHttpsMetadata = false;
+    o.SaveToken = true;
+    o.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+
+var app = builder.Build();
+
+app.UseCors("Policy");
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
+
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
